@@ -1,0 +1,17 @@
+{
+    "localization": {
+      "version": "1.0",
+      "id": "en",
+      "name": "English",
+      "texts": [
+        {"id": "activation.btnActivate", "text": "Activate"},
+        {"id": "activation.errorIncorrectCodeText", "text": "Incorrect activation code, please try again"},
+        {"id": "activation.placeHolderText", "text": "Please enter activation code"},
+        {"id": "biometric.dialog.title", "text": "Biometric login to TrialMax"},
+        {"id": "biometric.locked.message", "text": "<p>For security reasons, biometric authentication is currently unavailable.</p><p>Please try again later or log in using your PIN.</p>"},
+        {"id": "biometric.locked.title", "text": "Biometric authentication is not available"},
+        {"id": "contact.back", "text": "Close"},
+        {"id": "contact.helpDeskDescription", "text": "<p><b>__name__ Help Desk information:</b></p><p><a class=\"is-attr-class-block is-attr-icon-top\" href=\"tel://(__phonePrefix__)__helpDeskNumber__\">(__phonePrefix__)__helpDeskNumber__</a> (__helpDeskOpenTime__)</p>"}
+      ]
+    }
+  }

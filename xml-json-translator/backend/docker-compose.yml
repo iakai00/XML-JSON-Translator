@@ -10,9 +10,13 @@ services:
       - ./:/app
       - backend_cache:/root/.cache
     environment:
-      - ENVIRONMENT=development
-      - LOG_LEVEL=debug
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - LOG_LEVEL=${LOG_LEVEL:-debug}
       - MODEL_CACHE_DIR=/root/.cache/huggingface
+      - TRANSLATION_SERVICE=${TRANSLATION_SERVICE:-huggingface}
+      - AWS_REGION=${AWS_REGION:-}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
