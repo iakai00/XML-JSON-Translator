@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LOCALIZATION version="1.0" id="en" name="English">
+    <TEXT id="welcome.title">Welcome to our application</TEXT>
+    <TEXT id="welcome.message">Thank you for using our service</TEXT>
+    <TEXT id="error.generic">An error has occurred</TEXT>
+    <TEXT id="success.save">Your changes have been saved successfully</TEXT>
+</LOCALIZATION>

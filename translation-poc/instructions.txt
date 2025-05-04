@@ -1,0 +1,9 @@
+- Create a docker image: docker build -t translation-service .
+- Run the docker container: docker run --rm \
+    --platform linux/arm64 \
+    -p 8000:8000 \
+    -v "$(pwd)/input:/app/input:ro" \
+    -v "$(pwd)/output:/app/output" \
+    translation-service
+- In a separate terminal, curl -X POST -F "file=@input/test_full.xml" http://localhost:8000/translate/
+- Where the input directory should contain the xml file named test_full.xml.

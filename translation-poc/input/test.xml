@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LOCALIZATION version="1.0" id="en" name="English">
+  <TEXT id="test.hello">Hello World</TEXT>
+</LOCALIZATION>
