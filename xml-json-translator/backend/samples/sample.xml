@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LOCALIZATION version="1.0" id="en" name="English">
+  <TEXT id="activation.btnActivate">Activate</TEXT>
+  <TEXT id="activation.errorIncorrectCodeText">Incorrect activation code, please try again</TEXT>
+  <TEXT id="activation.placeHolderText">Please enter activation code</TEXT>
+  <TEXT id="biometric.dialog.title">Biometric login to TrialMax</TEXT>
+  <TEXT id="biometric.locked.message"><![CDATA[<p>For security reasons, biometric authentication is currently unavailable.</p><p>Please try again later or log in using your PIN.</p>]]></TEXT>
+  <TEXT id="biometric.locked.title">Biometric authentication is not available</TEXT>
+  <TEXT id="contact.back">Close</TEXT>
+  <TEXT id="contact.helpDeskDescription"><![CDATA[<p><b>__name__ Help Desk information:</b></p><p><a class="is-attr-class-block is-attr-icon-top" href="tel://(__phonePrefix__)__helpDeskNumber__">(__phonePrefix__)__helpDeskNumber__</a> (__helpDeskOpenTime__)</p>]]></TEXT>
+</LOCALIZATION>

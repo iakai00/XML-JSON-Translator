@@ -1,7 +1,10 @@
+# app/core/config.py
 import os
-from pydantic import BaseSettings
 from typing import Dict, List, Optional
 from functools import lru_cache
+
+# For Pydantic v2, import from pydantic-settings
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
