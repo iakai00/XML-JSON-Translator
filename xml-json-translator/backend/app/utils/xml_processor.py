@@ -154,7 +154,7 @@ class XMLProcessor:
     # The JSON processing method would need similar changes
     def process_json(self, json_data: Dict, translate_func: Callable[[str], str]) -> Dict:
         """
-        Process JSON data and translate text values while preserving structure, IDs and HTML elements
+        Process JSON data and translate text values while preserving structure and IDs
         
         Args:
             json_data: JSON data as dictionary
@@ -163,6 +163,22 @@ class XMLProcessor:
         Returns:
             Translated JSON data as dictionary
         """
+        # Check if this is our specific JSON format 
+        if isinstance(json_data, dict) and "LOCALIZATION" in json_data:
+            # Special handling for our specific format
+            localization = json_data["LOCALIZATION"]
+            if "TEXT" in localization and isinstance(localization["TEXT"], list):
+                for text_item in localization["TEXT"]:
+                    if isinstance(text_item, dict) and "id" in text_item and "content" in text_item:
+                        # Only translate the content field, preserving ID
+                        content = text_item["content"]
+                        if content:
+                            content_for_translation, placeholders = self._preserve_placeholders(content)
+                            translated_content = translate_func(content_for_translation)
+                            text_item["content"] = self._restore_placeholders(translated_content, placeholders)
+                return json_data
+        
+        # Generic JSON processing for other formats
         translated_data = {}
         
         for key, value in json_data.items():
@@ -173,13 +189,15 @@ class XMLProcessor:
                 # Process lists
                 translated_data[key] = [
                     self.process_json(item, translate_func) if isinstance(item, dict) 
-                    else self._translate_text_with_preservation(item, translate_func) if isinstance(item, str) 
+                    else translate_func(item) if isinstance(item, str) 
                     else item
                     for item in value
                 ]
             elif isinstance(value, str) and key.lower() in ['text', 'content', 'value', 'description']:
-                # Translate text fields with HTML preservation
-                translated_data[key] = self._translate_text_with_preservation(value, translate_func)
+                # Translate text fields
+                content_for_translation, placeholders = self._preserve_placeholders(value)
+                translated_value = translate_func(content_for_translation)
+                translated_data[key] = self._restore_placeholders(translated_value, placeholders)
             else:
                 # Keep other fields unchanged
                 translated_data[key] = value
