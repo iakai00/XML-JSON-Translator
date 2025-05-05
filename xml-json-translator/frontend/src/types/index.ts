@@ -10,9 +10,18 @@ export interface Language {
   
   // Form data for translation request
   export interface TranslationFormData {
-    file: File | null;
+    files: File[];
     targetLanguage: string;
     serviceType: TranslationService;
+  }
+  
+  // Record for a translated file
+  export interface TranslatedFile {
+    originalName: string;
+    translatedName: string;
+    downloadUrl: string;
+    targetLanguage: string;
+    timestamp: string;
   }
   
   // API response types

@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import Select from 'react-select';
 import { Language, TranslationService } from '@/types';
 import { getSupportedLanguages } from '@/services/apiService';
 
@@ -12,6 +11,7 @@ const LanguageSelector = ({ onChange, serviceType }: LanguageSelectorProps) => {
   const [languages, setLanguages] = useState<Language[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('');
 
   useEffect(() => {
     const fetchLanguages = async () => {
@@ -31,28 +31,36 @@ const LanguageSelector = ({ onChange, serviceType }: LanguageSelectorProps) => {
     fetchLanguages();
   }, [serviceType]);
 
-  const options = languages.map(lang => ({
-    value: lang.code,
-    label: lang.name || (lang.model ? `${lang.code.toUpperCase()} (${lang.model})` : lang.code.toUpperCase())
-  }));
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setSelectedLanguage(value);
+    onChange(value);
+  };
 
   return (
     <div className="w-full">
-      {error && <p className="text-red-500 text-sm mb-1">{error}</p>}
-      <Select
-        options={options}
-        onChange={(option) => option && onChange(option.value)}
-        placeholder={isLoading ? "Loading languages..." : "Select target language"}
-        isDisabled={isLoading || languages.length === 0}
-        className="w-full"
-        classNames={{
-          control: (state) => 
-            `!rounded-md !shadow-sm !border ${state.isFocused ? '!border-blue-500 !shadow-outline-blue' : '!border-gray-300'}`
-        }}
-      />
+      {error && <p className="text-error text-sm mb-1">{error}</p>}
+      <select
+        onChange={handleChange}
+        value={selectedLanguage}
+        className="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-primary focus:outline-none focus:ring-primary sm:text-sm bg-white text-gray-800 font-medium"
+        disabled={isLoading || languages.length === 0}
+      >
+        <option value="" className="text-gray-500">Select a target language</option>
+        {languages.map((language) => (
+          <option 
+            key={language.code} 
+            value={language.code}
+            className="text-gray-800 font-medium"
+          >
+            {language.name || (language.model ? `${language.code.toUpperCase()} (${language.model})` : language.code.toUpperCase())}
+          </option>
+        ))}
+      </select>
+      
       {isLoading && (
         <div className="flex items-center justify-center mt-2">
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
           <span className="ml-2 text-sm text-gray-500">Loading available languages...</span>
         </div>
       )}

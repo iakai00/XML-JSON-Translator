@@ -58,3 +58,121 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Add these CSS variables to your globals.css file */
+:root {
+  /* Primary palette */
+  --color-primary-light: #6B8CC7;
+  --color-primary: #4A6FA5;
+  --color-primary-dark: #395782;
+  
+  /* Secondary palette */
+  --color-secondary-light: #A7C4BC;
+  --color-secondary: #5E8B7E;
+  --color-secondary-dark: #4D7268;
+  
+  /* Neutrals */
+  --color-bg-light: #F9F9F9;
+  --color-bg: #F5F5F5;
+  --color-gray-100: #F3F4F6;
+  --color-gray-200: #E5E7EB;
+  --color-gray-300: #D1D5DB;
+  --color-gray-400: #9CA3AF;
+  --color-gray-500: #6B7280;
+  --color-gray-600: #4B5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1F2937;
+  
+  /* Accent colors */
+  --color-success-light: #A7F3D0;
+  --color-success: #5E8B7E;
+  --color-warning-light: #FEF3C7;
+  --color-warning: #E9B949;
+  --color-error-light: #FEE2E2;
+  --color-error: #C1666B;
+}
+
+/* Custom gradients */
+.gradient-primary {
+  background: linear-gradient(to right, var(--color-primary-light), var(--color-primary));
+}
+
+.gradient-secondary {
+  background: linear-gradient(to right, var(--color-secondary-light), var(--color-secondary));
+}
+
+.gradient-neutral {
+  background: linear-gradient(to right, #f8f9fa, #f5f5f5);
+}
+
+.gradient-success {
+  background: linear-gradient(to right, var(--color-secondary-light), var(--color-secondary));
+}
+
+.text-gradient-primary {
+  background: linear-gradient(to right, var(--color-primary), var(--color-primary-dark));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Apply Tailwind classes with CSS variables */
+.bg-primary {
+  background-color: var(--color-primary);
+}
+
+.bg-primary-light {
+  background-color: var(--color-primary-light);
+}
+
+.bg-secondary {
+  background-color: var(--color-secondary);
+}
+
+.bg-secondary-light {
+  background-color: var(--color-secondary-light);
+}
+
+.bg-success {
+  background-color: var(--color-success);
+}
+
+.text-primary {
+  color: var(--color-primary);
+}
+
+.text-primary-dark {
+  color: var(--color-primary-dark);
+}
+
+.text-secondary {
+  color: var(--color-secondary);
+}
+
+.hover\:bg-primary-dark:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.focus\:ring-primary:focus {
+  --tw-ring-color: var(--color-primary);
+}
+
+.border-primary {
+  border-color: var(--color-primary);
+}
+
+.text-success {
+  color: var(--color-success);
+}
+
+.border-success {
+  border-color: var(--color-success);
+}
+
+.text-error {
+  color: var(--color-error);
+}
+
+.border-error {
+  border-color: var(--color-error);
+}

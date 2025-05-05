@@ -10,7 +10,7 @@ const services = [
   {
     id: 'huggingface',
     name: 'Hugging Face',
-    description: 'Free machine translation service using Helsinki-NLP models',
+    description: 'Free machine translation using Helsinki-NLP models',
     icon: (
       <svg className="h-6 w-6 text-gray-600" viewBox="0 0 24 24" fill="currentColor">
         <path d="M10.682 16.942H8.855v-4.705h1.827v4.705zm0-5.35H8.855V9.402h1.827v2.19zm4.464 5.35h-1.827v-4.705h1.827v4.705zm0-5.35h-1.827V9.402h1.827v2.19z" />
@@ -45,7 +45,7 @@ const ServiceSelector = ({ value, onChange }: ServiceSelectorProps) => {
               value={service.id}
               className={({ checked }) =>
                 `relative flex cursor-pointer rounded-lg px-5 py-4 focus:outline-none
-                ${checked ? 'bg-blue-50 border border-blue-500' : 'bg-white border border-gray-200 hover:bg-gray-50'}`
+                ${checked ? 'bg-primary-light bg-opacity-15 border border-primary' : 'bg-white border border-gray-200 hover:bg-gray-50'}`
               }
             >
               {({ checked }) => (
@@ -55,22 +55,22 @@ const ServiceSelector = ({ value, onChange }: ServiceSelectorProps) => {
                     <div className="ml-3">
                       <RadioGroup.Label
                         as="p"
-                        className={`font-medium ${checked ? 'text-blue-900' : 'text-gray-900'}`}
+                        className={`font-medium ${checked ? 'text-primary-dark' : 'text-gray-900'}`}
                       >
                         {service.name}
                       </RadioGroup.Label>
                       <RadioGroup.Description
                         as="span"
-                        className={`inline text-sm ${checked ? 'text-blue-700' : 'text-gray-500'}`}
+                        className={`inline text-sm ${checked ? 'text-primary' : 'text-gray-500'}`}
                       >
                         {service.description}
                       </RadioGroup.Description>
                     </div>
                   </div>
                   <div
-                    className={`flex-shrink-0 ${checked ? 'text-blue-500' : 'text-gray-400'}`}
+                    className={`flex-shrink-0 ${checked ? 'text-primary' : 'text-gray-400'}`}
                   >
-                    <div className={`h-6 w-6 rounded-full border-2 ${checked ? 'border-blue-500 bg-blue-500' : 'border-gray-300'} flex items-center justify-center`}>
+                    <div className={`h-6 w-6 rounded-full border-2 ${checked ? 'border-primary bg-primary' : 'border-gray-300'} flex items-center justify-center`}>
                       {checked && (
                         <div className="h-2 w-2 rounded-full bg-white"></div>
                       )}
