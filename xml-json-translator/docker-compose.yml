@@ -1,0 +1,53 @@
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount local code for development
+      - ./backend/app:/app/app
+      - ./backend/main.py:/app/main.py
+      # Most importantly, preserve the model cache across builds
+      - huggingface_cache:/root/.cache/huggingface
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - LOG_LEVEL=${LOG_LEVEL:-debug}
+      - MODEL_CACHE_DIR=/root/.cache/huggingface
+      - TRANSLATION_SERVICE=${TRANSLATION_SERVICE:-huggingface}
+      - AWS_REGION=${AWS_REGION:-}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - translator-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=http://backend:8000/api/v1
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8000/api/v1
+    depends_on:
+      - backend
+    networks:
+      - translator-network
+
+networks:
+  translator-network:
+    driver: bridge
+
+volumes:
+  huggingface_cache:
+    driver: local

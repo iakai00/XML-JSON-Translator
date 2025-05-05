@@ -174,7 +174,19 @@ class BedrockTranslationService:
             return text
         
         try:
-            # ... rest of the method remains the same ...
+            response = self.client.invoke_model(
+            modelId=self.model_id,
+            body=json.dumps(request_body)
+            )
+        
+            # Parse response
+            response_body = json.loads(response['body'].read())
+            translated_text = response_body['content'][0]['text']
+            
+            # Clean up the response if needed
+            translated_text = translated_text.strip()
+        
+            return translated_text# ... rest of the method remains the same ...
             
         except ClientError as e:
             error_code = e.response['Error']['Code'] if 'Error' in e.response else 'Unknown'

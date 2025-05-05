@@ -1,8 +1,10 @@
+# app/services/huggingface_service.py
 from transformers import MarianMTModel, MarianTokenizer
 import logging
 import os
 from typing import Dict, List, Tuple
 import torch
+import threading
 
 from app.core.config import get_settings
 
@@ -10,14 +12,22 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 class HuggingFaceTranslationService:
-    def __init__(self):
-        self.models: Dict[str, Tuple[MarianTokenizer, MarianMTModel]] = {}
-        self.language_models = settings.HUGGINGFACE_LANGUAGE_MODELS
-        self.cache_dir = settings.MODEL_CACHE_DIR
-        
-        # Ensure cache directory exists
-        os.makedirs(self.cache_dir, exist_ok=True)
-        
+    _instance = None
+    _lock = threading.Lock()
+    
+    def __new__(cls):
+        with cls._lock:
+            if cls._instance is None:
+                cls._instance = super(HuggingFaceTranslationService, cls).__new__(cls)
+                cls._instance.models = {}
+                cls._instance.language_models = settings.HUGGINGFACE_LANGUAGE_MODELS
+                cls._instance.cache_dir = settings.MODEL_CACHE_DIR
+                
+                # Ensure cache directory exists
+                os.makedirs(cls._instance.cache_dir, exist_ok=True)
+                
+        return cls._instance
+    
     def get_supported_languages(self) -> List[Dict[str, str]]:
         """Get list of supported target languages"""
         return [
@@ -35,6 +45,22 @@ class HuggingFaceTranslationService:
         if model_name not in self.models:
             logger.info(f"Loading model for {target_lang}: {model_name}")
             try:
+                # First try to load from cache dir to avoid network requests
+                tokenizer = MarianTokenizer.from_pretrained(
+                    model_name, 
+                    cache_dir=self.cache_dir,
+                    local_files_only=os.path.exists(os.path.join(self.cache_dir, model_name))
+                )
+                model = MarianMTModel.from_pretrained(
+                    model_name, 
+                    cache_dir=self.cache_dir,
+                    local_files_only=os.path.exists(os.path.join(self.cache_dir, model_name))
+                )
+                self.models[model_name] = (tokenizer, model)
+                logger.info(f"Successfully loaded model for {target_lang}")
+            except Exception as e:
+                # If loading from cache fails, download from Hugging Face
+                logger.warning(f"Failed to load model from cache, downloading: {str(e)}")
                 tokenizer = MarianTokenizer.from_pretrained(
                     model_name, 
                     cache_dir=self.cache_dir
@@ -44,12 +70,11 @@ class HuggingFaceTranslationService:
                     cache_dir=self.cache_dir
                 )
                 self.models[model_name] = (tokenizer, model)
-                logger.info(f"Successfully loaded model for {target_lang}")
-            except Exception as e:
-                logger.error(f"Failed to load model for {target_lang}: {str(e)}")
-                raise
+                logger.info(f"Successfully downloaded model for {target_lang}")
         
         return self.models[model_name]
+    
+    # Rest of the implementation remains the same
     
     def translate(self, text: str, target_lang: str) -> str:
         """Translate text to the specified target language"""
