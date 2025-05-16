@@ -1,144 +1,129 @@
-# XML & JSON Translator
+# XML/JSON Translator with FastAPI and Next.js
 
-A web application that translates XML and JSON files from English to multiple languages using machine learning models.
+A modern web application for translating XML and JSON files from English to multiple languages while preserving structure, tags, and attributes.
 
-## Features
+## Key Features
 
-- Upload and translate XML and JSON files
-- Preserve structure, IDs, and CDATA sections in XML files
-- Support for placeholders in the form of `__name__`
-- Choose from multiple target languages
-- Two translation engines:
-  - **Hugging Face** (free): Uses Helsinki-NLP models
-  - **AWS Bedrock** (premium): Uses Claude AI for better translations
+- **Structure Preservation**: Maintains XML/JSON hierarchy and special elements
+- **Multiple Translation Engines**:
+  - **Hugging Face** (Free): Helsinki NLP models for offline translation
+  - **Claude AI** (Premium): High-quality translation via Anthropic's API
+- **Format Support**:
+  - XML with CDATA sections, placeholders, and embedded HTML
+  - JSON with automatic field detection
+- **User-Friendly Interface**:
+  - Drag-and-drop file upload
+  - Multiple file batch processing
+  - Clear progress indicators and download management
 
-## Project Structure
+## Technology Stack
 
-```
-xml-translator/
-├── backend/            # FastAPI backend
-│   ├── app/
-│   │   ├── api/        # API endpoints
-│   │   ├── core/       # Core configurations
-│   │   ├── models/     # Pydantic models
-│   │   ├── services/   # Translation services
-│   │   └── utils/      # Utility functions
-│   ├── tests/          # Backend tests
-│   ├── Dockerfile      # Backend Docker configuration
-│   └── ...             # Other backend files
-├── frontend/           # Next.js frontend
-│   ├── src/
-│   │   ├── app/        # Next.js app directory
-│   │   ├── components/ # React components
-│   │   ├── services/   # API service layer
-│   │   ├── styles/     # CSS styles
-│   │   └── types/      # TypeScript types
-│   ├── Dockerfile      # Frontend Docker configuration
-│   └── ...             # Other frontend files
-├── docker-compose.yml  # Docker Compose configuration
-├── .env                # Environment variables
-└── run.sh              # Script to run the application
-```
-
-## Requirements
-
-- Docker and Docker Compose
-- For AWS Bedrock service: AWS credentials
+- **Backend**: Python FastAPI
+- **Frontend**: Next.js with React
+- **Translation**: Helsinki NLP and Claude API
+- **Deployment**: Docker containerization
 
 ## Getting Started
 
-### Quick Start for Mac
+### Prerequisites
 
-1. Clone this repository:
+- Docker and Docker Compose
+- Claude API key (for premium translation)
+
+### Quick Start
+
+1. Clone the repository:
    ```bash
    git clone https://github.com/yourusername/xml-translator.git
    cd xml-translator
    ```
 
-2. Run the application:
+2. Configure environment variables:
    ```bash
-   chmod +x run.sh
-   ./run.sh
+   # Create .env file in backend directory
+   echo "CLAUDE_API_KEY=your_api_key_here" > backend/.env
    ```
 
-3. Access the application:
-   - Frontend: http://localhost:3000
-   - Backend API docs: http://localhost:8000/docs
-
-### Manual Setup
-
-1. Configure environment variables:
-   ```bash
-   cp .env.example .env
-   # Edit .env file to set required variables
-   ```
-
-2. Start the application with Docker Compose:
+3. Start the application:
    ```bash
    docker-compose up -d
    ```
 
-3. Stop the application:
-   ```bash
-   docker-compose down
-   ```
+4. Access the web interface at http://localhost:3000
+
+## Usage Guide
+
+1. **Upload Files**: Drag & drop or select XML or JSON files
+2. **Choose Language**: Select your desired target language
+3. **Select Service**: Choose between Hugging Face (free) or Claude (premium)
+4. **Translate**: Click the translate button and monitor progress
+5. **Download**: Download translated files when ready
+
+## Supported Languages
+
+- **Hugging Face**: Finnish, Swedish, German, French, Spanish
+- **Claude API**: 20+ languages including Asian languages (Japanese, Chinese, Korean)
+
+## Translation Quality
+
+- **Hugging Face**: Good quality for basic content, runs locally
+- **Claude API**: Higher quality with better context understanding, requires API key
 
 ## Development
 
-### Backend Development
+### Local Setup
 
-The backend is built with FastAPI and provides endpoints for:
-- Getting supported languages
-- Translating XML files
-- Translating JSON files
-
-To run the backend in development mode:
 ```bash
+# Backend
 cd backend
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate  # or venv\Scripts\activate on Windows
 pip install -r requirements.txt
 uvicorn main:app --reload
-```
 
-### Frontend Development
-
-The frontend is built with Next.js and Tailwind CSS:
-
-```bash
+# Frontend
 cd frontend
 npm install
 npm run dev
 ```
 
-## Using AWS Bedrock
+### Configuration Options
 
-To use the AWS Bedrock service for higher quality translations:
+Edit `config.py` to modify:
+- Available language models
+- CORS settings
+- Logging configuration
+- API endpoints
 
-1. Set up AWS credentials in the `.env` file:
-   ```
-   AWS_REGION=us-east-1  # Your AWS region
-   AWS_ACCESS_KEY_ID=your-access-key
-   AWS_SECRET_ACCESS_KEY=your-secret-key
-   TRANSLATION_SERVICE=bedrock
-   ```
+## Docker Deployment
 
-2. Restart the application
+The application is containerized for easy deployment:
 
-## Testing
-
-### Backend Tests
 ```bash
-cd backend
-pytest
+# Start all services
+docker-compose up -d
+
+# Backend only
+docker-compose up -d backend
+
+# View logs
+docker-compose logs -f
 ```
 
-### Frontend Tests
-```bash
-cd frontend
-npm test
-```
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a pull request
 
 ## License
 
-MIT
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- [Helsinki NLP](https://huggingface.co/Helsinki-NLP) for their open-source translation models
+- [Anthropic](https://anthropic.com) for the Claude API
+- The FastAPI and Next.js communities for excellent documentation
