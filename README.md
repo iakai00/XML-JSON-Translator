@@ -61,7 +61,7 @@ A modern web application for translating XML and JSON files from English to mult
 
 ## Supported Languages
 
-- **Hugging Face**: Finnish, Swedish, German, French, Spanish
+- **Hugging Face**: Finnish, Swedish, German, French, Spanish and more
 - **Claude API**: 20+ languages including Asian languages (Japanese, Chinese, Korean)
 
 ## Translation Quality
