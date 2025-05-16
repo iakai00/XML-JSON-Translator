@@ -1,4 +1,3 @@
-
 services:
   backend:
     build:
@@ -14,15 +13,27 @@ services:
       - LOG_LEVEL=${LOG_LEVEL:-debug}
       - MODEL_CACHE_DIR=/root/.cache/huggingface
       - TRANSLATION_SERVICE=${TRANSLATION_SERVICE:-huggingface}
-      - AWS_REGION=${AWS_REGION:-}
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY:-}
+      - CLAUDE_MODEL=${CLAUDE_MODEL:-claude-3-5-sonnet-20241022}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=http://backend:8000/api/v1
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8000/api/v1
+    depends_on:
+      - backend
 
 volumes:
   backend_cache:

@@ -151,58 +151,125 @@ class XMLProcessor:
             logger.error(f"Error processing XML: {str(e)}")
             raise
     
-    # The JSON processing method would need similar changes
-    def process_json(self, json_data: Dict, translate_func: Callable[[str], str]) -> Dict:
+    def process_json(self, json_data: Dict, translate_func: Callable[[str], str], is_claude: bool = False) -> Dict:
         """
-        Process JSON data and translate text values while preserving structure and IDs
+        Process JSON data and translate text values while preserving structure
         
         Args:
             json_data: JSON data as dictionary
             translate_func: Function that takes a string and returns translated string
+            is_claude: Whether we're using Claude API (affects translation method)
             
         Returns:
             Translated JSON data as dictionary
         """
-        # Check if this is our specific JSON format 
-        if isinstance(json_data, dict) and "LOCALIZATION" in json_data:
-            # Special handling for our specific format
-            localization = json_data["LOCALIZATION"]
-            if "TEXT" in localization and isinstance(localization["TEXT"], list):
-                for text_item in localization["TEXT"]:
-                    if isinstance(text_item, dict) and "id" in text_item and "content" in text_item:
-                        # Only translate the content field, preserving ID
-                        content = text_item["content"]
-                        if content:
-                            content_for_translation, placeholders = self._preserve_placeholders(content)
-                            translated_content = translate_func(content_for_translation)
-                            text_item["content"] = self._restore_placeholders(translated_content, placeholders)
-                return json_data
-        
-        # Generic JSON processing for other formats
+        # If using Claude, we'll use the specialized translate_json_field method
+        if is_claude:
+            from app.services.translation_factory import TranslationServiceFactory
+            
+            # Get current target language and service type from the context
+            # This depends on how your translate_func is set up
+            # You might need to adapt this based on your implementation
+            
+            # Create a wrapper function to redirect to JSON-specific translation
+            def translate_json_field_wrapper(text):
+                if not text or text.isspace():
+                    return text
+                    
+                # Extract target language and service type from context
+                # This is a simplified example - you'll need to adapt it
+                target_lang = getattr(translate_func, 'target_lang', None)
+                service_type = getattr(translate_func, 'service_type', 'claude')
+                
+                if target_lang:
+                    return TranslationServiceFactory.translate_json_field(text, target_lang, 'claude')
+                else:
+                    # Fallback to regular translation if we couldn't get context
+                    return translate_func(text)
+                    
+            # Use our wrapper for translation
+            return self._process_json_internal(json_data, translate_json_field_wrapper)
+        else:
+            # For other services, use the regular translation
+            return self._process_json_internal(json_data, translate_func)
+    
+    # This is the internal implementation that does the actual recursion
+    def _process_json_internal(self, json_data: Dict, translate_func: Callable[[str], str]) -> Dict:
+        """Internal implementation of JSON processing"""
         translated_data = {}
         
         for key, value in json_data.items():
             if isinstance(value, dict):
                 # Recursively process nested dictionaries
-                translated_data[key] = self.process_json(value, translate_func)
+                translated_data[key] = self._process_json_internal(value, translate_func)
             elif isinstance(value, list):
                 # Process lists
-                translated_data[key] = [
-                    self.process_json(item, translate_func) if isinstance(item, dict) 
-                    else translate_func(item) if isinstance(item, str) 
-                    else item
-                    for item in value
-                ]
-            elif isinstance(value, str) and key.lower() in ['text', 'content', 'value', 'description']:
+                if all(isinstance(item, str) for item in value):
+                    # If all items are strings, translate each one
+                    translated_data[key] = [translate_func(item) for item in value]
+                else:
+                    # Process lists of mixed/complex types
+                    translated_data[key] = [
+                        self._process_json_internal(item, translate_func) if isinstance(item, dict) 
+                        else translate_func(item) if isinstance(item, str) and self._should_translate_key(key)
+                        else item
+                        for item in value
+                    ]
+            elif isinstance(value, str) and self._should_translate_key(key):
                 # Translate text fields
                 content_for_translation, placeholders = self._preserve_placeholders(value)
-                translated_value = translate_func(content_for_translation)
-                translated_data[key] = self._restore_placeholders(translated_value, placeholders)
+                
+                # Preserve HTML tags if present
+                content_with_tags_preserved, preserved_tags = self._preserve_html_tags(content_for_translation)
+                content_with_attrs_preserved, preserved_attrs = self._preserve_html_attributes(content_with_tags_preserved)
+                
+                # Translate the processed content
+                translated_content = translate_func(content_with_attrs_preserved)
+                
+                # Restore placeholders, HTML tags and attributes in reverse order
+                restored_content = self._restore_preserved_content(translated_content, preserved_attrs)
+                restored_content = self._restore_preserved_content(restored_content, preserved_tags)
+                restored_content = self._restore_preserved_content(restored_content, placeholders)
+                
+                translated_data[key] = restored_content
             else:
                 # Keep other fields unchanged
                 translated_data[key] = value
-                
+                    
         return translated_data
+
+    def _should_translate_key(self, key: str) -> bool:
+        """Determine if a JSON key likely contains translatable content"""
+        # Common field names that typically contain translatable text
+        translatable_keys = [
+            'text', 'title', 'description', 'name', 'label', 'message', 
+            'content', 'body', 'summary', 'caption', 'heading', 'subheading',
+            'error', 'warning', 'info', 'note', 'tooltip', 'placeholder',
+            'button', 'link', 'menu', 'option', 'help', 'hint', 'confirmation'
+        ]
+        
+        # Check if the lowercase key is in our list of translatable keys
+        key_lower = key.lower()
+        
+        # Direct match with common text field names
+        if key_lower in translatable_keys:
+            return True
+        
+        # Check for keys ending with common text field suffixes
+        for translatable_key in translatable_keys:
+            if key_lower.endswith(f"_{translatable_key}") or key_lower.endswith(f"{translatable_key}s"):
+                return True
+                
+        # Check for keys containing 'text', 'message', 'title', etc.
+        for text_indicator in ['text', 'message', 'title', 'description', 'label']:
+            if text_indicator in key_lower:
+                return True
+        
+        # Additional checks for special formats like i18n identifiers
+        if 'i18n' in key_lower or 'label' in key_lower or 'msg' in key_lower:
+            return True
+            
+        return False
     
     def _translate_text_with_preservation(self, text: str, translate_func: Callable[[str], str]) -> str:
         """Helper method to translate text while preserving HTML and placeholders"""

@@ -1,10 +1,10 @@
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, BackgroundTasks
+from fastapi.responses import FileResponse  # Make sure this is imported too
+import json
+import logging
 import os
 import tempfile
-import logging
 from typing import Optional, List
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
-from fastapi.responses import FileResponse, JSONResponse
-import json
 
 from app.core.config import get_settings, Settings
 from app.models.translation import Language, SupportedLanguagesResponse, TranslationResponse
@@ -84,6 +84,7 @@ async def translate_xml_file(
 
 @router.post("/json", response_model=TranslationResponse)
 async def translate_json_file(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     target_language: str = Form(...),
     service_type: Optional[str] = Form(None),
@@ -96,10 +97,23 @@ async def translate_json_file(
     if not file.filename.lower().endswith(('.json', '.jsonl')):
         raise HTTPException(status_code=400, detail="Only JSON files are supported")
     
+    # Check file size
+    file_size = 0
+    chunk_size = 1024  # 1KB
+    file_content = bytearray()
+    
+    while chunk := await file.read(chunk_size):
+        file_size += len(chunk)
+        file_content.extend(chunk)
+        if file_size > MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=413, 
+                detail=f"File too large. Maximum size allowed is {MAX_FILE_SIZE / (1024 * 1024)}MB"
+            )
+    
     try:
-        # Read file content
-        content = await file.read()
-        json_content = content.decode('utf-8')
+        # Decode file content
+        json_content = file_content.decode('utf-8')
         
         # Parse JSON
         try:
@@ -109,16 +123,41 @@ async def translate_json_file(
         
         # Create a translation function that will be called by the processor
         def translate_text(text):
-            return TranslationServiceFactory.translate(text, target_language, service_type)
+            if not text or text.isspace():
+                return text
+                
+            try:
+                # Add context attributes for extracting in XML processor if using Claude
+                if service_type == 'claude':
+                    # Store target language and service type for the wrapper
+                    translate_text.target_lang = target_language
+                    translate_text.service_type = service_type
+                
+                logger.debug(f"Translating text: {text[:50]}...")
+                return TranslationServiceFactory.translate(text, target_language, service_type)
+            except Exception as e:
+                logger.error(f"Translation error: {str(e)}")
+                return text  # Return original text on error
+        
+        # Flag whether we're using Claude
+        is_claude = service_type == 'claude'
         
         # Process the JSON and translate the text
-        translated_json = xml_processor.process_json(json_data, translate_text)
+        try:
+            # Pass the is_claude flag to the processor
+            translated_json = xml_processor.process_json(json_data, translate_text, is_claude=is_claude)
+        except Exception as e:
+            logger.exception(f"JSON processing error: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"JSON processing error: {str(e)}")
         
         # Create a temporary file to store the translated JSON
         target_lang_suffix = target_language.lower()
         fd, temp_path = tempfile.mkstemp(suffix=f'_{target_lang_suffix}.json')
         with os.fdopen(fd, 'w', encoding='utf-8') as tmp:
             json.dump(translated_json, tmp, ensure_ascii=False, indent=2)
+        
+        # Add cleanup task to remove the temporary file after response is sent
+        background_tasks.add_task(os.unlink, temp_path)
         
         # Generate output filename
         original_name = os.path.splitext(file.filename)[0]
@@ -133,9 +172,8 @@ async def translate_json_file(
         )
     
     except Exception as e:
-        logger.error(f"Error translating JSON: {str(e)}")
+        logger.exception(f"Error translating JSON: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Translation failed: {str(e)}")
-
 
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 

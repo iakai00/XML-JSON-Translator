@@ -1,4 +1,3 @@
-# app/core/config.py
 import os
 from typing import Dict, List, Optional
 from functools import lru_cache
@@ -32,14 +31,18 @@ class Settings(BaseSettings):
         "de": "Helsinki-NLP/opus-mt-en-de",  # English to German
         "fr": "Helsinki-NLP/opus-mt-en-fr",  # English to French
         "es": "Helsinki-NLP/opus-mt-en-es",  # English to Spanish
+        "it": "Helsinki-NLP/opus-mt-en-it",  # English to Italian
+        "nl": "Helsinki-NLP/opus-mt-en-nl",  # English to Dutch
+        "pl": "Helsinki-NLP/opus-mt-en-pl",  # English to Polish
+        "pt": "Helsinki-NLP/opus-mt-en-pt",  # English to Portuguese
+        "ru": "Helsinki-NLP/opus-mt-en-ru",  # English to Russian
     }
     
-    # AWS Bedrock configuration - ONLY from environment variables
-    AWS_REGION: Optional[str] = None
-    AWS_ACCESS_KEY_ID: Optional[str] = None
-    AWS_SECRET_ACCESS_KEY: Optional[str] = None
+    # Claude API configuration
+    CLAUDE_API_KEY: Optional[str] = None
+    CLAUDE_MODEL: str = os.getenv("CLAUDE_MODEL", "claude-3-5-sonnet-20241022")
     
-    # Service selection (huggingface or bedrock)
+    # Service selection (huggingface or claude)
     TRANSLATION_SERVICE: str = os.getenv("TRANSLATION_SERVICE", "huggingface")
 
     class Config:
@@ -48,20 +51,14 @@ class Settings(BaseSettings):
 
     def validate(self) -> bool:
         """Validate important configuration settings"""
-        if self.TRANSLATION_SERVICE.lower() == "bedrock":
-            if not all([
-                self.AWS_REGION,
-                self.AWS_ACCESS_KEY_ID,
-                self.AWS_SECRET_ACCESS_KEY
-            ]):
+        if self.TRANSLATION_SERVICE.lower() == "claude":
+            if not self.CLAUDE_API_KEY:
                 logger.warning(
-                    "AWS Bedrock service selected but credentials are incomplete. "
-                    "Make sure AWS_REGION, AWS_ACCESS_KEY_ID, and AWS_SECRET_ACCESS_KEY "
-                    "are all provided in environment variables."
+                    "Claude API service selected but API key is missing. "
+                    "Make sure CLAUDE_API_KEY is provided in environment variables."
                 )
                 return False
         return True
-
 
 @lru_cache()
 def get_settings():

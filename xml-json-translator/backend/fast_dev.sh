@@ -8,6 +8,12 @@ if ! docker volume inspect huggingface_cache >/dev/null 2>&1; then
     echo "Creating Docker volume for model cache..."
     docker volume create huggingface_cache
 fi
+# Check if Claude API key is set
+if [ -z "$CLAUDE_API_KEY" ] && [ -n "$(grep -E '^CLAUDE_API_KEY=' .env)" ]; then
+    # Load from .env file if it exists and has the key
+    export $(grep -E '^CLAUDE_API_KEY=' .env | xargs)
+    echo "Loaded Claude API key from .env file"
+fi
 
 # Check if we want to build with pre-downloaded models
 if [ "$1" == "--with-models" ]; then
